@@ -1,16 +1,57 @@
-import React, { useEffect, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useEffect, useRef, useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import '../components/CategoryGrid.css';
 import '../components/Hero.css';
 
-const CategoryPage = ({ category, title, description, items, heroImage }) => {
+import { productApi } from '../api';
+import { useCart } from '../context/CartContext';
+
+// Map URL slugs → Firebase category names + page metadata
+const CATEGORY_META = {
+    necklace: { category: 'Necklace', title: 'Necklaces', description: 'Handcrafted necklaces for every occasion.' },
+    bracelet: { category: 'Bracelet', title: 'Bracelets', description: 'Delicate and bold bracelets crafted with love.' },
+    choker: { category: 'Choker', title: 'Chokers', description: 'Elegant chokers to elevate your style.' },
+    earring: { category: 'Earring', title: 'Earrings', description: 'Beautiful earrings for every mood.' },
+};
+
+const CategoryPage = ({ category: categoryProp, title: titleProp, description: descProp, items: initialItems, heroImage }) => {
+    const { categorySlug } = useParams();
+
+    // Derive category/title/description from URL slug if not passed as props
+    const meta = CATEGORY_META[categorySlug?.toLowerCase()] || {};
+    const category = categoryProp || meta.category || categorySlug;
+    const title = titleProp || meta.title || categorySlug;
+    const description = descProp || meta.description || '';
+
+    const { addToCart } = useCart();
+    const [items, setItems] = useState(initialItems || []);
+    const [loading, setLoading] = useState(!initialItems);
+    const [toastMessage, setToastMessage] = useState('');
     const gridRef = useRef(null);
     const { pathname } = useLocation();
     const navigate = useNavigate();
 
+    const handleAddToCart = (e, product) => {
+        e.stopPropagation();
+        addToCart(product, 1);
+        setToastMessage(`${product.title} added to cart!`);
+        setTimeout(() => setToastMessage(''), 2000);
+    };
+
     useEffect(() => {
         window.scrollTo(0, 0);
-    }, [pathname]);
+
+        // Fetch matching items if we didn't receive them as props
+        if (!initialItems) {
+            setLoading(true);
+            productApi.getProducts({ category, active: true })
+                .then(res => setItems(res.data || []))
+                .catch(err => console.error("Failed fetching category products", err))
+                .finally(() => setLoading(false));
+        } else {
+            setItems(initialItems);
+        }
+    }, [pathname, category, initialItems]);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -34,6 +75,17 @@ const CategoryPage = ({ category, title, description, items, heroImage }) => {
 
     return (
         <div className="category-page">
+            {/* Toast Notification */}
+            {toastMessage && (
+                <div style={{
+                    position: 'fixed', bottom: '30px', left: '50%', transform: 'translateX(-50%)',
+                    background: '#2d2d2d', color: '#fff', padding: '12px 24px',
+                    borderRadius: '8px', zIndex: 9999, fontSize: '14px',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.3)', animation: 'fadeIn 0.3s ease'
+                }}>
+                    ✓ {toastMessage}
+                </div>
+            )}
             <section className="hero" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', overflow: 'visible' }}>
                 <div className="hero-container" style={heroImage ? {
                     gridTemplateColumns: '1fr 1fr',
@@ -85,62 +137,75 @@ const CategoryPage = ({ category, title, description, items, heroImage }) => {
                 </div>
             </section>
 
-            <section className="category-grid" ref={gridRef} style={{ paddingTop: '50px' }}>
-                <div className="category-grid-container">
-                    {items.map((product, index) => (
-                        <div
-                            key={index}
-                            className={`category-card animate-on-scroll ${product.isDark ? 'dark' : ''}`}
-                            style={{
-                                backgroundColor: product.bgColor,
-                                animationDelay: `${index * 0.1}s`,
-                                cursor: 'pointer'
-                            }}
-                            onClick={() => navigate(`/product/${product.id}`)}
-                        >
-                            <div className="category-image">
-                                <img src={product.image} alt={product.title} />
-                            </div>
-                            <div className="category-content">
-                                <span className="category-subtitle">{product.subtitle}</span>
-                                <h3 className="category-title">{product.title}</h3>
-                                {product.description && (
-                                    <p className="category-description">{product.description}</p>
-                                )}
-                                {product.price && (
-                                    <div className="category-price-container">
-                                        <span className="current-price">{product.price}</span>
-                                        {product.originalPrice && <span className="original-price">{product.originalPrice}</span>}
-                                        {product.discount && <span className="discount-tag">{product.discount}</span>}
+            <section className="category-grid" ref={gridRef} style={{ paddingTop: '50px', minHeight: '400px' }}>
+                {loading ? (
+                    <div style={{ textAlign: 'center', padding: '50px' }}>Loading...</div>
+                ) : items.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '50px' }}>No items found in this category.</div>
+                ) : (
+                    <div className="category-grid-container">
+                        {items.map((product, index) => {
+                            // Firebase stores display metadata nested under product.metadata
+                            const meta = product.metadata || {};
+                            const subtitle = product.subtitle || meta.subtitle || product.category;
+                            const bgColor = product.bgColor || meta.bgColor || '#fff';
+                            const isDark = product.isDark ?? meta.isDark ?? false;
+                            const discount = product.discount || meta.discount;
+                            const comparePrice = product.originalPrice || product.compareAtPrice;
+
+                            return (
+                                <div
+                                    key={product.id || index}
+                                    className={`category-card animate-on-scroll ${isDark ? 'dark' : ''}`}
+                                    style={{
+                                        backgroundColor: bgColor,
+                                        animationDelay: `${index * 0.1}s`,
+                                        cursor: 'pointer'
+                                    }}
+                                    onClick={() => navigate(`/product/${product.id}`)}
+                                >
+                                    <div className="category-image">
+                                        <img src={product.image} alt={product.title} />
                                     </div>
-                                )}
-                                <div className="category-actions">
-                                    <button
-                                        className="btn-add-to-cart"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            alert(`Added ${product.title} to cart!`);
-                                        }}
-                                    >
-                                        ADD TO CART
-                                    </button>
-                                    <button
-                                        className={`btn-icon ${product.isDark ? 'light' : ''}`}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            navigate(`/product/${product.id}`);
-                                        }}
-                                    >
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                                            <polyline points="12 5 19 12 12 19"></polyline>
-                                        </svg>
-                                    </button>
+                                    <div className="category-content">
+                                        <span className="category-subtitle">{subtitle}</span>
+                                        <h3 className="category-title">{product.title}</h3>
+                                        {product.description && (
+                                            <p className="category-description">{product.description}</p>
+                                        )}
+                                        {product.price && (
+                                            <div className="category-price-container">
+                                                <span className="current-price">₹{product.price}</span>
+                                                {comparePrice && <span className="original-price">₹{comparePrice}</span>}
+                                                {discount && <span className="discount-tag">{discount}</span>}
+                                            </div>
+                                        )}
+                                        <div className="category-actions">
+                                            <button
+                                                className="btn-add-to-cart"
+                                                onClick={(e) => handleAddToCart(e, product)}
+                                            >
+                                                ADD TO CART
+                                            </button>
+                                            <button
+                                                className={`btn-icon ${isDark ? 'light' : ''}`}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    navigate(`/product/${product.id}`);
+                                                }}
+                                            >
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                            );
+                        })}
+                    </div>
+                )}
             </section>
         </div>
     );

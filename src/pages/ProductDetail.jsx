@@ -2,30 +2,48 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './ProductDetail.css';
 
+import { productApi } from '../api';
+import { useCart } from '../context/CartContext';
+
 const ProductDetail = ({ allProducts }) => {
     const { productId } = useParams();
     const navigate = useNavigate();
+    const { addToCart } = useCart();
+
     const [product, setProduct] = useState(null);
+    const [loading, setLoading] = useState(true);
     const [selectedImage, setSelectedImage] = useState(0);
     const [quantity, setQuantity] = useState(1);
+    const [toast, setToast] = useState('');
 
     useEffect(() => {
         window.scrollTo(0, 0);
 
-        // Find the product from all categories
-        const foundProduct = allProducts.find(p => p.id === productId);
-        setProduct(foundProduct);
+        // Fetch product from backend
+        setLoading(true);
+        productApi.getProductById(productId)
+            .then(res => {
+                if (res.success) {
+                    setProduct(res.data);
+                } else {
+                    navigate('/');
+                }
+            })
+            .catch(err => {
+                console.error("Failed to load product", err);
+                // Also check if it's in allProducts (fallback for static demo)
+                const found = allProducts?.find(p => p.id === productId);
+                if (found) setProduct(found);
+                else navigate('/');
+            })
+            .finally(() => setLoading(false));
 
-        if (!foundProduct) {
-            // Product not found, redirect to home
-            navigate('/');
-        }
     }, [productId, allProducts, navigate]);
 
-    if (!product) {
+    if (loading || !product) {
         return (
-            <div className="product-detail-loading">
-                <div className="loading-spinner"></div>
+            <div className="product-detail-loading" style={{ height: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="loading-spinner">Loading Product...</div>
             </div>
         );
     }
@@ -39,15 +57,29 @@ const ProductDetail = ({ allProducts }) => {
     ];
 
     const handleAddToCart = () => {
-        alert(`Added ${quantity} ${product.title} to cart!`);
+        addToCart(product, quantity);
+        setToast(`${quantity} × ${product.title} added to cart!`);
+        setTimeout(() => setToast(''), 2500);
     };
 
     const handleBuyNow = () => {
-        alert(`Proceeding to checkout with ${quantity} ${product.title}`);
+        addToCart(product, quantity);
+        navigate('/cart');
     };
 
     return (
         <div className="product-detail-page">
+            {/* Toast notification */}
+            {toast && (
+                <div style={{
+                    position: 'fixed', bottom: '30px', left: '50%', transform: 'translateX(-50%)',
+                    background: '#2d2d2d', color: '#fff', padding: '12px 24px',
+                    borderRadius: '8px', zIndex: 9999, fontSize: '14px',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
+                }}>
+                    ✓ {toast}
+                </div>
+            )}
             <div className="product-detail-container">
                 {/* Breadcrumb */}
                 <div className="breadcrumb">
@@ -75,7 +107,7 @@ const ProductDetail = ({ allProducts }) => {
                             ))}
                         </div>
                         <div className="gallery-main">
-                            <div className="main-image-wrapper" style={{ backgroundColor: product.bgColor }}>
+                            <div className="main-image-wrapper" style={{ backgroundColor: product.metadata?.bgColor || product.bgColor || '#f5f0eb' }}>
                                 <img src={productImages[selectedImage]} alt={product.title} />
                             </div>
                         </div>
@@ -91,12 +123,12 @@ const ProductDetail = ({ allProducts }) => {
 
                         <div className="product-pricing">
                             <div className="price-row">
-                                <span className="current-price">{product.price}</span>
-                                {product.originalPrice && (
-                                    <span className="original-price">{product.originalPrice}</span>
+                                <span className="current-price">₹{product.price}</span>
+                                {(product.compareAtPrice || product.originalPrice) && (
+                                    <span className="original-price">₹{product.compareAtPrice || product.originalPrice}</span>
                                 )}
-                                {product.discount && (
-                                    <span className="discount-badge">{product.discount}</span>
+                                {(product.metadata?.discount || product.discount) && (
+                                    <span className="discount-badge">{product.metadata?.discount || product.discount}</span>
                                 )}
                             </div>
                             <p className="tax-info">Inclusive of all taxes</p>
