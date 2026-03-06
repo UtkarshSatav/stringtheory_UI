@@ -326,3 +326,230 @@
     background: #e8f5e9;
     color: #2e7d32;
 }
+
+/* Image Upload & Dropzone */
+.image-upload-wrapper {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.image-upload-dropzone {
+    width: 100%;
+    height: 180px;
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+    background: #fdfdfd;
+    transition: all 0.2s ease;
+    overflow: hidden;
+}
+
+.image-upload-dropzone:hover,
+.image-upload-dropzone.active {
+    border-color: #c9a961;
+    background: #faf7f0;
+}
+
+.image-upload-dropzone.uploading {
+    cursor: default;
+    border-style: solid;
+}
+
+.file-input {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.upload-content {
+    text-align: center;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.upload-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #888;
+}
+
+.upload-icon {
+    font-size: 30px;
+    font-style: normal;
+    margin-bottom: 10px;
+}
+
+.upload-placeholder p {
+    font-size: 13px;
+    margin: 0;
+}
+
+.image-preview {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.image-preview .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.image-preview:hover .overlay {
+    opacity: 1;
+}
+
+.upload-progress-container {
+    width: 80%;
+    text-align: center;
+}
+
+.progress-bar {
+    height: 6px;
+    background: #c9a961;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    transition: width 0.3s;
+}
+
+.upload-progress-container span {
+    font-size: 12px;
+    color: #666;
+    font-weight: 500;
+}
+/* Bulk Upload Styles */
+.bulk-upload-container {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    margin-bottom: 30px;
+}
+
+.bulk-upload-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.bulk-upload-header h3 {
+    margin: 0;
+    color: #2d2d2d;
+}
+
+.help-text {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+.help-text code {
+    background: #f5f5f5;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #c9a961;
+    font-weight: 500;
+}
+
+.bulk-textarea {
+    width: 100%;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+    font-size: 13px;
+    background: #fafafa;
+    resize: vertical;
+    margin-bottom: 20px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.bulk-textarea:focus {
+    border-color: #c9a961;
+}
+
+.btn-bulk-upload {
+    background: #2d2d2d;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-bulk-upload:hover:not(:disabled) {
+    background: #444;
+    transform: translateY(-2px);
+}
+
+.btn-bulk-upload:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: #f0f0f0;
+    color: #2d2d2d;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+    background: #e5e5e5;
+}
+
+.bulk-error {
+    background: #fdecea;
+    color: #c0392b;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.bulk-success {
+    background: #edf7ed;
+    color: #2e7d32;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}

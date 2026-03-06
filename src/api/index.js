@@ -7,6 +7,7 @@ export const productApi = {
 
     // Admin
     createProduct: (data) => apiClient.post('/products', data).then(res => res.data),
+    bulkCreateProducts: (data) => apiClient.post('/products/bulk', data).then(res => res.data),
     updateProduct: (id, data) => apiClient.put(`/products/${id}`, data).then(res => res.data),
     deleteProduct: (id) => apiClient.delete(`/products/${id}`).then(res => res.data),
 };
@@ -40,6 +41,7 @@ export const customerApi = {
     getProfile: () => apiClient.get('/customers/profile').then(res => res.data),
     getOrders: () => apiClient.get('/customers/orders').then(res => res.data),
     syncCustomer: (data) => apiClient.post('/customers/sync', data).then(res => res.data),
+    getAllCustomers: () => apiClient.get('/customers/admin/all').then(res => res.data),
 };
 
 export const returnApi = {

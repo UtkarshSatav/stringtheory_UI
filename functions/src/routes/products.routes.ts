@@ -13,6 +13,7 @@ router.get('/:id', productController.getProductById);
 // Admin Routes
 router.use(verifyToken, requireAdmin);
 router.post('/', validateRequest(productSchema), productController.createProduct);
+router.post('/bulk', productController.bulkCreateProducts);
 router.put('/:id', validateRequest(productSchema), productController.updateProduct);
 router.delete('/:id', productController.deleteProduct);
 router.post('/:id/adjust-stock', validateRequest(stockAdjustSchema), productController.adjustStock);

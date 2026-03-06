@@ -19,8 +19,7 @@ if (!admin.apps.length) {
         } catch (e: any) {
             console.error("Firebase init failed from JSON string:", e.message);
         }
-    } else if (credPath && !credPath.startsWith('/Users')) {
-        // Only attempt to read files if they are not absolute Mac user paths (for Render safety)
+    } else if (credPath) {
         try {
             const serviceAccount = JSON.parse(require('fs').readFileSync(credPath, 'utf8'));
             admin.initializeApp({

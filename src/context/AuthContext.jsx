@@ -16,14 +16,19 @@ export const AuthProvider = ({ children }) => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             setCurrentUser(user);
             if (user) {
-                // Checking custom claim or the specific provided Admin UID
-                const idTokenResult = await user.getIdTokenResult();
-                const isAdminUser = !!idTokenResult.claims.admin || user.uid === 'bO4hxi9UxndcwtAit5hiy5FyVnD3';
-                setIsAdmin(isAdminUser);
+                try {
+                    // Checking custom claim or the specific provided Admin UID
+                    const idTokenResult = await user.getIdTokenResult();
+                    const isAdminUser = !!idTokenResult.claims.admin || user.uid === 'bO4hxi9UxndcwtAit5hiy5FyVnD3';
+                    setIsAdmin(isAdminUser);
 
-                // Also save token for axios
-                const token = await user.getIdToken();
-                localStorage.setItem('auth_token', token);
+                    // Also save token for axios
+                    const token = await user.getIdToken();
+                    localStorage.setItem('auth_token', token);
+                } catch (error) {
+                    console.error("Failed to get token:", error);
+                    setIsAdmin(false);
+                }
             } else {
                 setIsAdmin(false);
                 localStorage.removeItem('auth_token');

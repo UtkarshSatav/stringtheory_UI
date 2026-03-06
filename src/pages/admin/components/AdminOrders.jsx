@@ -8,18 +8,20 @@ const AdminOrders = () => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        fetchOrders();
-    }, []);
-
     const fetchOrders = async () => {
         setLoading(true);
         try {
             const res = await orderApi.getOrders();
             setOrders(res.data || []);
-        } catch (e) { console.error('Error fetching orders:', e); }
+        } catch (e) {
+            console.error('Error fetching orders:', e);
+        }
         setLoading(false);
     };
+
+    useEffect(() => {
+        fetchOrders();
+    }, []);
 
     const handleUpdateStatus = async (id, newStatus) => {
         try {
@@ -78,7 +80,7 @@ const AdminOrders = () => {
             doc.text(splitAddress, 14, 70);
 
             // 4. Line Items Table
-            const tableColumn = ["Item", "Quantity", "Price", "Total"];
+            const tableColumn = ["Item", "Qty", "Price", "Total"];
             const tableRows = [];
 
             (order.items || []).forEach(item => {
@@ -91,39 +93,47 @@ const AdminOrders = () => {
                 tableRows.push(itemData);
             });
 
-            // Add subtotal, shipping, discount rows if available
-            if (order.subtotal !== undefined) {
-                tableRows.push(["", "", "Subtotal", `Rs. ${order.subtotal}`]);
-            }
+            // Footer rows
+            const subtotalValue = order.subtotal || (order.items || []).reduce((acc, i) => acc + (i.price * i.quantity), 0);
+            tableRows.push([{ content: 'Subtotal', colSpan: 3, styles: { halign: 'right' } }, `Rs. ${subtotalValue}`]);
+
             if (order.discount > 0) {
-                tableRows.push(["", "", "Discount", `-Rs. ${order.discount}`]);
+                tableRows.push([{ content: 'Discount', colSpan: 3, styles: { halign: 'right' } }, `-Rs. ${order.discount}`]);
             }
             if (order.shippingFee !== undefined) {
-                tableRows.push(["", "", "Shipping", order.shippingFee === 0 ? "Free" : `Rs. ${order.shippingFee}`]);
+                tableRows.push([{ content: 'Shipping', colSpan: 3, styles: { halign: 'right' } }, order.shippingFee === 0 ? "Free" : `Rs. ${order.shippingFee}`]);
             }
 
             // Final Total Row
-            tableRows.push(["", "", "Grand Total", `Rs. ${order.grandTotal || 0}`]);
+            tableRows.push([{ content: 'Grand Total', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold' } }, `Rs. ${order.grandTotal || subtotalValue}`]);
 
             autoTable(doc, {
                 startY: 95,
                 head: [tableColumn],
                 body: tableRows,
                 theme: 'striped',
-                headStyles: { fillColor: [26, 26, 26] },
-                styles: { fontSize: 10 },
+                headStyles: {
+                    fillColor: [26, 26, 26],
+                    fontSize: 10,
+                    halign: 'left'
+                },
                 columnStyles: {
-                    0: { cellWidth: 80 },
+                    0: { cellWidth: 100 },
                     1: { halign: 'center' },
                     2: { halign: 'right' },
-                    3: { halign: 'right', fontStyle: 'bold' }
+                    3: { halign: 'right' }
                 },
-                willDrawCell: function (data) {
-                    // Highlight the final row
+                didParseCell: function (data) {
+                    // Header alignment
+                    if (data.section === 'head') {
+                        if (data.column.index === 1) data.cell.styles.halign = 'center';
+                        if (data.column.index === 2 || data.column.index === 3) data.cell.styles.halign = 'right';
+                    }
+
+                    // Final row styling for Grand Total
                     if (data.row.index === tableRows.length - 1) {
-                        doc.setFont("helvetica", "bold");
-                        doc.setTextColor(0, 0, 0);
-                        doc.setFillColor(240, 240, 240);
+                        data.cell.styles.fontStyle = 'bold';
+                        data.cell.styles.fillColor = [240, 240, 240];
                     }
                 }
             });
@@ -137,7 +147,7 @@ const AdminOrders = () => {
                 doc.text("Thank you for choosing The String Theory.", 105, 285, { align: 'center' });
             }
 
-            doc.save(`Invoice_${order.id.slice(-6)}.pdf`);
+            doc.save(`Invoice_${order.id.slice(-6).toUpperCase()}.pdf`);
         } catch (error) {
             console.error("Failed to generate PDF:", error);
             alert("Failed to generate PDF. Check the browser console for details.");

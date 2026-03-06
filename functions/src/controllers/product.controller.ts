@@ -64,6 +64,40 @@ export const createProduct = async (req: Request, res: Response) => {
     }
 };
 
+export const bulkCreateProducts = async (req: Request, res: Response) => {
+    try {
+        const products: Product[] = req.body;
+        if (!Array.isArray(products)) {
+            return res.status(400).json({ success: false, message: 'Body must be an array of products' });
+        }
+
+        const batch = db.batch();
+        const createdProducts: any[] = [];
+
+        products.forEach((p) => {
+            const data = { ...p };
+            data.inStock = (data.stockQuantity || 0) > 0;
+            data.createdAt = Timestamp.now();
+            data.updatedAt = Timestamp.now();
+            if (!data.slug && data.title) {
+                data.slug = data.title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+            }
+            if (!data.images) data.images = [];
+            if (data.active === undefined) data.active = true;
+
+            const newDocRef = productsRef.doc();
+            batch.set(newDocRef, data);
+            createdProducts.push({ id: newDocRef.id, ...data });
+        });
+
+        await batch.commit();
+
+        res.status(201).json({ success: true, count: createdProducts.length, data: createdProducts });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 export const updateProduct = async (req: Request, res: Response) => {
     try {
         const updateData = req.body;

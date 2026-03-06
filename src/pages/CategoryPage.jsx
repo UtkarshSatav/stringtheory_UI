@@ -165,7 +165,7 @@ const CategoryPage = ({ category: categoryProp, title: titleProp, description: d
                                     onClick={() => navigate(`/product/${product.id}`)}
                                 >
                                     <div className="category-image">
-                                        <img src={product.image} alt={product.title} />
+                                        <img src={product.images?.[0] || product.image} alt={product.title} />
                                     </div>
                                     <div className="category-content">
                                         <span className="category-subtitle">{subtitle}</span>

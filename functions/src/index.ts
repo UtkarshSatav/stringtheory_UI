@@ -1,13 +1,12 @@
+
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import path from 'path';
 import { db } from './config/firebase'; // Ensure firebase initializes
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
@@ -36,18 +35,8 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date() });
 });
 
-// Serve frontend in single deployment (Production)
-const frontendPath = path.join(__dirname, '../../dist');
-app.use(express.static(frontendPath));
-
-app.use((req, res) => {
-    // If it's an API route that wasn't matched, it should logically have been caught above,
-    // but we use /api prefix to be safe.
-    if (req.url.startsWith('/api')) {
-        return res.status(404).json({ success: false, message: 'API Route not found' });
-    }
-    res.sendFile(path.join(frontendPath, 'index.html'));
-});
+// Since we are running in Firebase Functions (which will be mounted under /api),
+// we don't need the static file catching or the '/api' prefix inside the handlers.
 
 // Global Error Handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
@@ -58,6 +47,15 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     });
 });
 
-app.listen(PORT, () => {
-    console.log(`String Theory OMS Backend listening on port ${PORT}`);
-});
+const isFirebase = !!process.env.FUNCTION_TARGET || !!process.env.FUNCTIONS_EMULATOR;
+
+export const api = isFirebase
+    ? require('firebase-functions/v2/https').onRequest(app)
+    : null;
+
+if (!isFirebase) {
+    const PORT = process.env.PORT || 5001; // Match .env default
+    app.listen(PORT, () => {
+        console.log(`String Theory OMS Backend listening on port ${PORT} (Local Dev Mode)`);
+    });
+}

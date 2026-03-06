@@ -107,7 +107,7 @@ const CheckoutPage = () => {
                 <div className="checkout-items">
                     {cartItems.map((item, idx) => (
                         <div key={idx} className="checkout-item-mini">
-                            <img src={item.image} alt={item.title} />
+                            <img src={item.images?.[0] || item.image} alt={item.title} />
                             <div className="checkout-item-info">
                                 <h4>{item.title}</h4>
                                 <span>Qty: {item.quantity}</span>

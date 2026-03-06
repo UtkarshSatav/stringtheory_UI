@@ -1,0 +1,53 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Function to check if user is the designated admin
+    function isAdmin() {
+      return request.auth != null && (request.auth.uid == 'bO4hxi9UxndcwtAit5hiy5FyVnD3' || request.auth.token.admin == true);
+    }
+
+    // Products & Collections: Publicly readable, Admin can write
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /collections/{collectionId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Orders: User can create and read their own. Admin can do everything.
+    match /orders/{orderId} {
+      allow create: if true; // Allow guest checkouts (or restrict to request.auth != null if required)
+      allow read: if isAdmin() || (request.auth != null && resource.data.customerId == request.auth.uid);
+      allow update, delete: if isAdmin();
+    }
+
+    // Returns: User can create and read their own. Admin can manage.
+    match /returns/{returnId} {
+      allow create: if request.auth != null;
+      allow read: if isAdmin() || (request.auth != null && resource.data.customerId == request.auth.uid);
+      allow write: if isAdmin();
+    }
+
+    // Forms/Inquiries: Public can write, only Admin can read
+    match /forms/{formType}/submissions/{submissionId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+    
+    // Legacy support for top-level forms if used
+    match /forms/{submissionId} {
+        allow create: if true;
+        allow read: if isAdmin();
+    }
+
+    // Customers/Profiles: User can read/write their own
+    match /customers/{uid} {
+      allow read, write: if isAdmin() || (request.auth != null && request.auth.uid == uid);
+    }
+  }
+}

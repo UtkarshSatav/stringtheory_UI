@@ -1,0 +1,245 @@
+.admin-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    padding-bottom: 50px;
+}
+
+.dashboard-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    font-size: 18px;
+    color: #666;
+}
+
+.btn-refresh {
+    background: #f0f0f0;
+    border: 1px solid #ddd;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.3s;
+}
+
+.btn-refresh:hover {
+    background: #e5e5e5;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+}
+
+.stat-card {
+    background: white;
+    padding: 25px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    background: #f8f9fa;
+}
+
+/* Specific Card Colors */
+.stat-card.revenue .stat-icon {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.stat-card.orders .stat-icon {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.stat-card.stock .stat-icon {
+    background: #fff3e0;
+    color: #ef6c00;
+}
+
+.stat-card.returns .stat-icon {
+    background: #fce4ec;
+    color: #c2185b;
+}
+
+.stat-info h3 {
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+    font-weight: 500;
+}
+
+.stat-value {
+    margin: 5px 0 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #2d2d2d;
+}
+
+.stat-sub {
+    font-size: 12px;
+    color: #999;
+    display: block;
+    margin-top: 2px;
+}
+
+/* Content Grid */
+.dashboard-content-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 25px;
+}
+
+.dashboard-section {
+    background: white;
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.section-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #2d2d2d;
+}
+
+/* Dashboard Table */
+.dashboard-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.dashboard-table th {
+    text-align: left;
+    padding: 12px;
+    font-size: 13px;
+    color: #999;
+    border-bottom: 2px solid #f8f9fa;
+}
+
+.dashboard-table td {
+    padding: 12px;
+    font-size: 14px;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.status-pill {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-pill.Pending {
+    background: #fff3e0;
+    color: #ef6c00;
+}
+
+.status-pill.Paid {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.status-pill.Shipped {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.status-pill.Delivered {
+    background: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.status-pill.Cancelled {
+    background: #ffebee;
+    color: #c62828;
+}
+
+/* Low Stock List */
+.low-stock-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.low-stock-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 10px;
+    border-radius: 10px;
+    background: #fff8f8;
+    border: 1px solid #ffeaea;
+}
+
+.product-thumb {
+    width: 45px;
+    height: 45px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #eee;
+}
+
+.product-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.product-details h4 {
+    margin: 0;
+    font-size: 14px;
+    color: #2d2d2d;
+}
+
+.product-details p {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: #666;
+}
+
+.urgent {
+    color: #c62828;
+    font-weight: 600;
+}
+
+.empty-msg {
+    text-align: center;
+    color: #999;
+    font-style: italic;
+    padding: 20px;
+}
+
+@media (max-width: 1024px) {
+    .dashboard-content-grid {
+        grid-template-columns: 1fr;
+    }
+}

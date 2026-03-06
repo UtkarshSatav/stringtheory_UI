@@ -7,18 +7,20 @@ const AdminCollections = () => {
     const [isCreating, setIsCreating] = useState(false);
     const [formData, setFormData] = useState({ name: '', description: '', slug: '', active: true });
 
-    useEffect(() => {
-        fetchCollections();
-    }, []);
-
     const fetchCollections = async () => {
         setLoading(true);
         try {
             const res = await collectionApi.getCollections();
             setCollections(res.data || []);
-        } catch (e) { console.error('Error fetching collections:', e); }
+        } catch (e) {
+            console.error('Error fetching collections:', e);
+        }
         setLoading(false);
     };
+
+    useEffect(() => {
+        fetchCollections();
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();

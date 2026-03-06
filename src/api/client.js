@@ -1,7 +1,11 @@
 import axios from 'axios';
 
-// Change this based on production url later
-const API_URL = 'http://localhost:5001/api';
+// Always point to live Render backend during local Vite development
+const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+const API_URL = isLocalDev
+    ? 'http://localhost:5001/api' // Point to local Express backend for dev
+    : '/api'; // Use relative path in production
 
 const apiClient = axios.create({
     baseURL: API_URL,

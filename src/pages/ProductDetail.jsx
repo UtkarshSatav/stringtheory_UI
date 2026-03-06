@@ -42,19 +42,19 @@ const ProductDetail = ({ allProducts }) => {
 
     if (loading || !product) {
         return (
-            <div className="product-detail-loading" style={{ height: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div className="loading-spinner">Loading Product...</div>
+            <div className="product-detail-loading">
+                <div className="loading-container">
+                    <div className="loading-spinner"></div>
+                    <p className="loading-text">Loading Product...</p>
+                </div>
             </div>
         );
     }
 
-    // Generate additional product images (for demo, we'll use the same image)
-    const productImages = [
-        product.image,
-        product.image,
-        product.image,
-        product.image
-    ];
+    // Generate additional product images. Use the images array if available, or fallback to the single image.
+    const productImages = product.images && product.images.length > 0
+        ? product.images
+        : [product.image, product.image, product.image, product.image];
 
     const handleAddToCart = () => {
         addToCart(product, quantity);

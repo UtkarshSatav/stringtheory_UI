@@ -74,3 +74,13 @@ export const syncCustomer = async (req: Request, res: Response) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
+export const getAllCustomers = async (req: Request, res: Response) => {
+    try {
+        const snapshot = await customersRef.get();
+        const customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        res.json({ success: true, count: customers.length, data: customers });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};

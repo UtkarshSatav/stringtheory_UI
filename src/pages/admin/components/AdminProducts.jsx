@@ -1,38 +1,52 @@
 import React, { useEffect, useState } from 'react';
 import { productApi } from '../../../api';
+import ImageUpload from './ImageUpload';
+import BulkUpload from './BulkUpload';
 
 const AdminProducts = () => {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
+    const [isBulkUploading, setIsBulkUploading] = useState(false);
     const [formData, setFormData] = useState(null);
 
-    useEffect(() => {
-        fetchProducts();
-    }, []);
+    const onImageUpload = (url) => {
+        setFormData({ ...formData, images: [url] });
+    };
 
     const fetchProducts = async () => {
         setLoading(true);
         try {
             const res = await productApi.getProducts();
             setProducts(res.data || []);
-        } catch (e) { console.error('Error fetching products:', e); }
+        } catch (e) {
+            console.error('Error fetching products:', e);
+        }
         setLoading(false);
     };
 
+    useEffect(() => {
+        fetchProducts();
+    }, []);
+
     const handleEdit = (prod) => {
-        setFormData(prod);
+        setFormData({
+            ...prod,
+            images: prod.images || (prod.image ? [prod.image] : [])
+        });
         setIsEditing(true);
     };
 
     const handleCreateNew = () => {
         setFormData({
             title: '',
+            slug: '',
+            description: '',
             category: 'Necklace',
             sku: '',
             price: 0,
             stockQuantity: 10,
-            image: '',
+            images: [],
             active: true
         });
         setIsEditing(true);
@@ -51,16 +65,19 @@ const AdminProducts = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const finalData = { ...formData };
+        if (!finalData.slug) {
+            finalData.slug = finalData.title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+        }
+
         try {
             if (formData.id) {
-                // Update
-                const res = await productApi.updateProduct(formData.id, formData);
+                const res = await productApi.updateProduct(formData.id, finalData);
                 if (res.success) {
-                    setProducts(products.map(p => p.id === formData.id ? res.data : p));
+                    setProducts(products.map(p => p.id === formData.id ? { ...finalData } : p));
                 }
             } else {
-                // Create
-                const res = await productApi.createProduct(formData);
+                const res = await productApi.createProduct(finalData);
                 if (res.success) {
                     setProducts([...products, res.data]);
                 }
@@ -76,30 +93,55 @@ const AdminProducts = () => {
         <div>
             <div className="admin-header-row">
                 <h2>Manage Products</h2>
-                {!isEditing && <button className="btn-add" onClick={handleCreateNew}>Add Product</button>}
+                <div className="admin-actions">
+                    <button
+                        className="btn-secondary"
+                        onClick={() => { setIsBulkUploading(!isBulkUploading); setIsEditing(false); }}
+                    >
+                        {isBulkUploading ? 'Back to List' : 'Bulk Upload'}
+                    </button>
+                    {!isEditing && !isBulkUploading && <button className="btn-add" onClick={handleCreateNew}>Add Product</button>}
+                </div>
             </div>
 
-            {loading ? <p>Loading Products...</p> : isEditing ? (
+            {isBulkUploading ? (
+                <BulkUpload onComplete={fetchProducts} />
+            ) : loading ? <p>Loading Products...</p> : isEditing ? (
                 <div className="admin-form-container">
                     <h3>{formData.id ? 'Edit Product' : 'Create New Product'}</h3>
                     <form onSubmit={handleSubmit} className="admin-form">
                         <div className="form-group">
-                            <label>Title</label>
-                            <input type="text" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} required />
+                            <label>Product Title</label>
+                            <input type="text" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="e.g. Cream Fancy Shell Necklace" required />
                         </div>
+
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Category</label>
+                                <select value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })}>
+                                    <option value="Necklace">Necklace</option>
+                                    <option value="Bracelet">Bracelet</option>
+                                    <option value="Choker">Choker</option>
+                                    <option value="Earring">Earring</option>
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>SKU</label>
+                                <input type="text" value={formData.sku || ''} onChange={e => setFormData({ ...formData, sku: e.target.value })} placeholder="SKU001" />
+                            </div>
+                        </div>
+
                         <div className="form-group">
-                            <label>Category</label>
-                            <select value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })}>
-                                <option value="Necklace">Necklace</option>
-                                <option value="Bracelet">Bracelet</option>
-                                <option value="Choker">Choker</option>
-                                <option value="Earring">Earring</option>
-                            </select>
+                            <label>Description</label>
+                            <textarea
+                                value={formData.description || ''}
+                                onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                rows="3"
+                                placeholder="Describe the product details..."
+                                required
+                            />
                         </div>
-                        <div className="form-group">
-                            <label>SKU</label>
-                            <input type="text" value={formData.sku} onChange={e => setFormData({ ...formData, sku: e.target.value })} />
-                        </div>
+
                         <div className="form-row">
                             <div className="form-group">
                                 <label>Price (₹)</label>
@@ -111,8 +153,11 @@ const AdminProducts = () => {
                             </div>
                         </div>
                         <div className="form-group">
-                            <label>Image URL</label>
-                            <input type="text" value={formData.image} onChange={e => setFormData({ ...formData, image: e.target.value })} />
+                            <label>Product Image</label>
+                            <ImageUpload
+                                onUploadSuccess={onImageUpload}
+                                currentImage={formData.images?.[0] || formData.image}
+                            />
                         </div>
                         <div className="admin-form-actions">
                             <button type="button" className="btn-cancel" onClick={() => setIsEditing(false)}>Cancel</button>
@@ -135,7 +180,13 @@ const AdminProducts = () => {
                     <tbody>
                         {products.map(prod => (
                             <tr key={prod.id}>
-                                <td><img src={prod.image} alt="product" style={{ width: '40px', borderRadius: '5px' }} /></td>
+                                <td>
+                                    <img
+                                        src={prod.images?.[0] || prod.image || 'https://via.placeholder.com/40'}
+                                        alt="product"
+                                        style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '5px' }}
+                                    />
+                                </td>
                                 <td>{prod.title}</td>
                                 <td>{prod.category}</td>
                                 <td>₹{prod.price}</td>
