@@ -53,8 +53,11 @@ export const api = isFirebase
     ? require('firebase-functions/v2/https').onRequest(app)
     : null;
 
-if (!isFirebase) {
-    const PORT = process.env.PORT || 5001; // Match .env default
+// Export app for Vercel
+export default app;
+
+if (!isFirebase && process.env.NODE_ENV !== 'test') {
+    const PORT = process.env.PORT || 5001;
     app.listen(PORT, () => {
         console.log(`String Theory OMS Backend listening on port ${PORT} (Local Dev Mode)`);
     });
